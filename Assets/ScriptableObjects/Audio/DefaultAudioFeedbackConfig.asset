@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7c8febb0bb5ac664dbc165ce18a553a8, type: 3}
+  m_Name: DefaultAudioFeedbackConfig
+  m_EditorClassIdentifier: 
+  bgm: {fileID: 0}
+  jump: {fileID: 0}
+  dash: {fileID: 0}
+  attack: {fileID: 0}
+  hit: {fileID: 0}
+  death: {fileID: 0}
+  uiConfirm: {fileID: 0}
+  uiCancel: {fileID: 0}
