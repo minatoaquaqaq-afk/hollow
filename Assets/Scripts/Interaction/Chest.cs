@@ -1,11 +1,11 @@
-﻿using HollowStyleMVP.Inventory;
+﻿using HollowStyleMVP.Core;
+using HollowStyleMVP.Inventory;
 using UnityEngine;
 
 namespace HollowStyleMVP.Interaction
 {
     public class Chest : MonoBehaviour, IInteractable
     {
-        [SerializeField] private string chestId = "test_chest";
         [SerializeField] private int coins = 5;
         [SerializeField] private InventoryItem item;
         [SerializeField] private int amount = 1;
@@ -19,6 +19,7 @@ namespace HollowStyleMVP.Interaction
             opened = true;
             if (coins > 0) InventorySystem.Instance.AddCoins(coins);
             if (item != null) InventorySystem.Instance.AddItem(item, amount);
+            FeedbackManager.Instance?.Play(FeedbackSound.Open);
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using HollowStyleMVP.Inventory;
+﻿using HollowStyleMVP.Combat;
+using HollowStyleMVP.Inventory;
 using UnityEngine;
 
 namespace HollowStyleMVP.Items
@@ -8,9 +9,18 @@ namespace HollowStyleMVP.Items
         [SerializeField] private int coins = 1;
         [SerializeField] private InventoryItem item;
         [SerializeField] private int amount = 1;
+        [SerializeField] private int healAmount;
         [SerializeField] private float magnetRange = 2.8f;
         [SerializeField] private float magnetSpeed = 7f;
         private Transform player;
+
+        public void Configure(int newCoins, InventoryItem newItem, int newAmount, int newHealAmount = 0)
+        {
+            coins = Mathf.Max(0, newCoins);
+            item = newItem;
+            amount = Mathf.Max(1, newAmount);
+            healAmount = Mathf.Max(0, newHealAmount);
+        }
 
         private void Start()
         {
@@ -30,6 +40,7 @@ namespace HollowStyleMVP.Items
             if (!other.CompareTag("Player") || InventorySystem.Instance == null) return;
             if (coins > 0) InventorySystem.Instance.AddCoins(coins);
             if (item != null) InventorySystem.Instance.AddItem(item, amount);
+            if (healAmount > 0 && other.TryGetComponent<Health>(out var health)) health.Heal(healAmount);
             Destroy(gameObject);
         }
     }

@@ -1,7 +1,9 @@
-﻿using System.Collections;
 using HollowStyleMVP.Combat;
+using HollowStyleMVP.Core;
+using HollowStyleMVP.Level;
 using HollowStyleMVP.UI;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace HollowStyleMVP.Player
 {
@@ -9,16 +11,13 @@ namespace HollowStyleMVP.Player
     public class PlayerRespawnController : MonoBehaviour
     {
         [SerializeField] private Transform respawnPoint;
-        [SerializeField] private float respawnDelay = 1.2f;
         private Health health;
-        private Vector3 fallbackSpawn;
         private PlayerController2D controller;
         private Rigidbody2D body;
         public bool IsDead { get; private set; }
 
         private void Awake()
         {
-            fallbackSpawn = transform.position;
             health = GetComponent<Health>();
             controller = GetComponent<PlayerController2D>();
             body = GetComponent<Rigidbody2D>();
@@ -33,20 +32,12 @@ namespace HollowStyleMVP.Player
             IsDead = true;
             if (controller != null) controller.enabled = false;
             if (body != null) body.velocity = Vector2.zero;
-            DeathUIController.Instance?.Show(respawnDelay);
-            StartCoroutine(RespawnRoutine());
-        }
 
-        private IEnumerator RespawnRoutine()
-        {
-            yield return new WaitForSeconds(respawnDelay);
-            transform.position = respawnPoint != null ? respawnPoint.position : fallbackSpawn;
-            health.SetCurrent(health.MaxHealth);
-            IsDead = false;
-            if (controller != null) controller.enabled = true;
             DeathUIController.Instance?.Hide();
+            UiModalState.Reset();
+            TestSceneRoomSetup.ResetRunState();
+            Time.timeScale = 1f;
+            SceneManager.LoadScene("MainMenu");
         }
     }
 }
-
-

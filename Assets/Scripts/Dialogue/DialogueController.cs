@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using HollowStyleMVP.Core;
+using HollowStyleMVP.UI;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -21,6 +22,7 @@ namespace HollowStyleMVP.Dialogue
         private void Awake()
         {
             Instance = this;
+            RoguelikeRoomHud.StyleDialoguePanel(panel);
             if (panel != null) panel.SetActive(false);
         }
 
@@ -46,6 +48,7 @@ namespace HollowStyleMVP.Dialogue
             RegisterModal();
             panel.SetActive(true);
             Time.timeScale = 1f;
+            RoguelikeRoomHud.StyleDialoguePanel(panel);
             if (speakerText != null) speakerText.text = speaker;
             ShowLine();
         }

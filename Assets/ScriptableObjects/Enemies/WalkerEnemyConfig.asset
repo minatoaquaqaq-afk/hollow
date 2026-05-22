@@ -15,9 +15,15 @@ MonoBehaviour:
   archetype: 0
   maxHealth: 3
   contactDamage: 1
+  attackPower: 0
+  defense: 0
+  critChance: 0.03
+  critResistance: 0
+  critDamageMultiplier: 1.3
   patrolSpeed: 2
   chaseSpeed: 4
   detectRange: 7
   attackRange: 1.2
   knockback: 5
   dropPrefab: {fileID: 0}
+  dropTable: {fileID: 11400000, guid: b8d00014e5285624b880273fd2c5376c, type: 2}

@@ -1,5 +1,4 @@
-﻿using System;
-using HollowStyleMVP.Core;
+﻿using HollowStyleMVP.Core;
 using UnityEngine;
 
 namespace HollowStyleMVP.Combat
@@ -17,13 +16,14 @@ namespace HollowStyleMVP.Combat
         public int MaxHealth => maxHealth;
         public bool IsDead => CurrentHealth <= 0;
 
-        public event Action<int, int> Changed;
-        public event Action Died;
-        public event Action Damaged;
+        public event System.Action<int, int> Changed;
+        public event System.Action Died;
+        public event System.Action Damaged;
 
         private void Awake()
         {
             CurrentHealth = maxHealth;
+            if (flashRenderer == null) flashRenderer = GetComponentInChildren<SpriteRenderer>();
             if (flashRenderer != null) originalColor = flashRenderer.color;
         }
 
@@ -43,25 +43,29 @@ namespace HollowStyleMVP.Combat
             Changed?.Invoke(CurrentHealth, maxHealth);
         }
 
-        public void Damage(int amount, Vector2 sourcePosition, float knockback)
+        public bool Damage(int amount, Vector2 sourcePosition, float knockback) => Damage(amount, sourcePosition, knockback, false);
+
+        public bool Damage(int amount, Vector2 sourcePosition, float knockback, bool critical)
         {
-            if (IsDead || invulnerableTimer > 0f || amount <= 0) return;
+            if (IsDead || invulnerableTimer > 0f || amount <= 0) return false;
 
             CurrentHealth = Mathf.Max(0, CurrentHealth - amount);
-            DamagePopup.Spawn(transform.position, amount);
-            HitEffect.Spawn(transform.position, Color.red);
-            FeedbackManager.Instance?.Play(FeedbackSound.Hit);
+            DamagePopup.Spawn(transform.position, amount, critical);
+            HitEffect.Spawn(transform.position, critical ? Color.magenta : Color.red);
+            FeedbackManager.Instance?.Play(critical ? FeedbackSound.Crit : FeedbackSound.Hit);
             FeedbackManager.Instance?.HitStop();
-            CameraShake.Instance?.Shake();
+            CameraShake.Instance?.Shake(critical ? 0.18f : 0.1f, critical ? 0.22f : 0.14f);
             Changed?.Invoke(CurrentHealth, maxHealth);
             Damaged?.Invoke();
             invulnerableTimer = invulnerableSeconds;
-            if (flashRenderer != null) flashRenderer.color = Color.red;
+            if (flashRenderer != null) flashRenderer.color = critical ? Color.magenta : Color.red;
 
             if (TryGetComponent<Rigidbody2D>(out var body))
             {
                 Vector2 direction = ((Vector2)transform.position - sourcePosition).normalized;
-                body.AddForce(new Vector2(direction.x, 0.35f).normalized * knockback, ForceMode2D.Impulse);
+                if (direction.sqrMagnitude <= 0.001f) direction = Vector2.right;
+                body.velocity *= 0.25f;
+                body.AddForce(direction * knockback, ForceMode2D.Impulse);
             }
 
             if (CurrentHealth <= 0)
@@ -69,6 +73,8 @@ namespace HollowStyleMVP.Combat
                 FeedbackManager.Instance?.Play(FeedbackSound.Death);
                 Died?.Invoke();
             }
+
+            return true;
         }
 
         public void SetCurrent(int value)
@@ -87,8 +93,7 @@ namespace HollowStyleMVP.Combat
             if (amount <= 0 || IsDead) return;
             CurrentHealth = Mathf.Min(maxHealth, CurrentHealth + amount);
             Changed?.Invoke(CurrentHealth, maxHealth);
+            HitEffect.Spawn(transform.position, Color.green);
         }
     }
 }
-
-

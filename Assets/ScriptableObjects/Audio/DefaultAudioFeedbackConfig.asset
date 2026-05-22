@@ -12,11 +12,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7c8febb0bb5ac664dbc165ce18a553a8, type: 3}
   m_Name: DefaultAudioFeedbackConfig
   m_EditorClassIdentifier: 
-  bgm: {fileID: 0}
+  bgm: {fileID: 8300000, guid: afeb1c5981458de449417c5bd21da17f, type: 3}
   jump: {fileID: 0}
   dash: {fileID: 0}
   attack: {fileID: 0}
+  downSlash: {fileID: 0}
   hit: {fileID: 0}
+  crit: {fileID: 0}
   death: {fileID: 0}
+  pickup: {fileID: 0}
+  buy: {fileID: 0}
+  open: {fileID: 0}
   uiConfirm: {fileID: 0}
   uiCancel: {fileID: 0}

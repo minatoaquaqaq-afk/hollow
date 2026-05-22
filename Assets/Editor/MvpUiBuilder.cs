@@ -21,6 +21,7 @@ namespace HollowStyleMVP.EditorTools
         public static void BuildUiPrefabs()
         {
             EnsureFolders();
+            MvpArtBuilder.PrepareArtAssets();
             SavePrefab(CreateInventoryUi(), "Assets/Prefabs/UI/InventoryUI.prefab");
             SavePrefab(CreateDialogueUi(), "Assets/Prefabs/UI/DialogueUI.prefab");
             SavePrefab(CreateShopUi(), "Assets/Prefabs/UI/ShopUI.prefab");
@@ -35,6 +36,7 @@ namespace HollowStyleMVP.EditorTools
         public static void BuildMainMenuScene()
         {
             EnsureFolders();
+            MvpArtBuilder.PrepareArtAssets();
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             scene.name = "MainMenu";
 
@@ -54,7 +56,7 @@ namespace HollowStyleMVP.EditorTools
             var newButton = CreateButton(root.transform, "New Game Button", "开始游戏", new Vector2(0, 55));
             var continueButton = CreateButton(root.transform, "Continue Button", "继续", new Vector2(0, -10));
             var quitButton = CreateButton(root.transform, "Quit Button", "退出", new Vector2(0, -75));
-            CreateText(root.transform, "Keys", "进入场景后：A/D移动 W/空格跳跃 Shift冲刺 J攻击 E交互 I背包 Esc关闭", 17, new Vector2(0, -155), new Vector2(470, 70));
+            CreateText(root.transform, "Keys", "进入场景后：WASD/方向键移动 Shift冲刺 J攻击 E交互 I背包 Esc关闭", 17, new Vector2(0, -155), new Vector2(470, 70));
 
             UnityEventTools.AddPersistentListener(newButton.onClick, controller.NewGame);
             UnityEventTools.AddPersistentListener(continueButton.onClick, controller.ContinueGame);
@@ -104,15 +106,16 @@ namespace HollowStyleMVP.EditorTools
             so.FindProperty("rowPrefab").objectReferenceValue = row;
             so.FindProperty("coinsText").objectReferenceValue = coins;
             so.ApplyModifiedPropertiesWithoutUndo();
+            panel.SetActive(false);
             return canvasObj;
         }
 
         private static GameObject CreateDialogueUi()
         {
             var canvasObj = CreateCanvas("DialogueUI");
-            var panel = CreatePanel(canvasObj.transform, "Dialogue Panel", new Color(0.05f, 0.055f, 0.065f, 0.96f), new Vector2(0, -250), new Vector2(900, 190));
-            var speaker = CreateText(panel.transform, "Speaker", "NPC", 24, new Vector2(-360, 55), new Vector2(220, 40));
-            var body = CreateText(panel.transform, "Body", "Dialogue text", 24, new Vector2(0, -20), new Vector2(790, 92));
+            var panel = CreatePanel(canvasObj.transform, "Dialogue Panel", new Color(0.01f, 0.018f, 0.024f, 0.88f), new Vector2(0, -410), new Vector2(900, 120));
+            var speaker = CreateText(panel.transform, "Speaker", "NPC", 20, new Vector2(-360, 34), new Vector2(220, 30));
+            var body = CreateText(panel.transform, "Body", "Dialogue text", 20, new Vector2(0, -20), new Vector2(790, 60));
             body.alignment = TextAnchor.UpperLeft;
 
             var controller = canvasObj.AddComponent<DialogueController>();
@@ -121,6 +124,7 @@ namespace HollowStyleMVP.EditorTools
             so.FindProperty("speakerText").objectReferenceValue = speaker;
             so.FindProperty("bodyText").objectReferenceValue = body;
             so.ApplyModifiedPropertiesWithoutUndo();
+            panel.SetActive(false);
             return canvasObj;
         }
 
@@ -145,6 +149,7 @@ namespace HollowStyleMVP.EditorTools
             so.FindProperty("listRoot").objectReferenceValue = list.transform;
             so.FindProperty("rowPrefab").objectReferenceValue = row;
             so.ApplyModifiedPropertiesWithoutUndo();
+            panel.SetActive(false);
             return canvasObj;
         }
 
@@ -171,6 +176,9 @@ namespace HollowStyleMVP.EditorTools
             rect.sizeDelta = size;
             var image = obj.AddComponent<Image>();
             image.color = color;
+            var panelSprite = MvpArtBuilder.Sprite(MvpArtBuilder.K("ui_box.png"));
+            bool usePlainRuntimePanel = name == "Inventory Panel" || name == "Dialogue Panel" || name == "Shop Panel";
+            if (!usePlainRuntimePanel && panelSprite != null) image.sprite = panelSprite;
             return obj;
         }
 
@@ -186,7 +194,7 @@ namespace HollowStyleMVP.EditorTools
             var label = obj.AddComponent<Text>();
             label.text = text;
             label.fontSize = size;
-            label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            label.font = MvpArtBuilder.UiFont();
             label.color = Color.white;
             label.alignment = TextAnchor.MiddleCenter;
             return label;
@@ -195,6 +203,9 @@ namespace HollowStyleMVP.EditorTools
         private static Button CreateButton(Transform parent, string name, string text, Vector2 anchored)
         {
             var obj = CreatePanel(parent, name, new Color(0.18f, 0.21f, 0.24f, 1f), anchored, new Vector2(300, 48));
+            var image = obj.GetComponent<Image>();
+            var buttonSprite = MvpArtBuilder.Sprite(MvpArtBuilder.K("ui_button.png"));
+            if (image != null && buttonSprite != null) image.sprite = buttonSprite;
             var button = obj.AddComponent<Button>();
             var label = CreateText(obj.transform, "Label", text, 22, Vector2.zero, new Vector2(280, 40));
             button.targetGraphic = obj.GetComponent<Image>();
@@ -215,11 +226,3 @@ namespace HollowStyleMVP.EditorTools
         }
     }
 }
-
-
-
-
-
-
-
-

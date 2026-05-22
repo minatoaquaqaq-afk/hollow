@@ -1,5 +1,6 @@
 ﻿using HollowStyleMVP.Core;
 using HollowStyleMVP.Inventory;
+using HollowStyleMVP.UI;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -18,6 +19,7 @@ namespace HollowStyleMVP.Shop
         private void Awake()
         {
             Instance = this;
+            RoguelikeRoomHud.StyleShopPanel(panel);
             if (panel != null) panel.SetActive(false);
         }
 
@@ -36,6 +38,8 @@ namespace HollowStyleMVP.Shop
             panel.SetActive(true);
             Time.timeScale = 1f;
             if (titleText != null) titleText.text = title;
+            RoguelikeRoomHud.StyleShopPanel(panel);
+            FeedbackManager.Instance?.Play(FeedbackSound.Open);
             RebuildRows();
         }
 
@@ -56,8 +60,10 @@ namespace HollowStyleMVP.Shop
                 row.interactable = currentItems[i].stock != 0;
                 var label = row.GetComponentInChildren<Text>();
                 string name = currentItems[i].item != null ? currentItems[i].item.displayName : "商品";
+                string type = currentItems[i].item != null ? TypeName(currentItems[i].item.type) : "";
                 string stock = currentItems[i].stock < 0 ? "∞" : currentItems[i].stock.ToString();
-                if (label != null) label.text = $"{name} - {currentItems[i].price}G x{stock}";
+                if (label != null) label.text = $"[{type}] {name} - {currentItems[i].price}G x{stock}";
+                RoguelikeRoomHud.StyleShopRow(row);
                 row.onClick.AddListener(() => Buy(index));
             }
         }
@@ -76,6 +82,21 @@ namespace HollowStyleMVP.Shop
             if (panel != null) panel.SetActive(false);
             UnregisterModal();
             Time.timeScale = 1f;
+            FeedbackManager.Instance?.Play(FeedbackSound.UiCancel);
+        }
+
+        private static string TypeName(ItemType type)
+        {
+            return type switch
+            {
+                ItemType.Consumable => "消耗品",
+                ItemType.Material => "材料",
+                ItemType.Quest => "任务",
+                ItemType.Equipment => "装备",
+                ItemType.Charm => "护符",
+                ItemType.Ability => "技能",
+                _ => "物品"
+            };
         }
 
         private void RegisterModal()

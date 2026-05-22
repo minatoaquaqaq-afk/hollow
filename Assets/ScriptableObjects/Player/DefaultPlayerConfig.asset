@@ -12,24 +12,31 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 04b01b1fbf363304da801dd4d4890ce4, type: 3}
   m_Name: DefaultPlayerConfig
   m_EditorClassIdentifier: 
-  maxHealth: 5
-  maxEnergy: 100
+  maxHealth: 40
+  maxEnergy: 120
   startCoins: 0
   attackPower: 1
   defense: 0
-  moveSpeed: 8
-  jumpForce: 15
-  variableJumpCutMultiplier: 0.5
+  critChance: 0.08
+  critResistance: 0.02
+  critDamageMultiplier: 1.5
+  moveSpeed: 5.8
+  jumpForce: 1
+  variableJumpCutMultiplier: 0.42
   startWithDoubleJump: 1
   startWithDash: 1
-  startWithDownStrike: 0
+  startWithDownStrike: 1
   startWithRangedAttack: 0
   maxAirJumps: 1
-  dashSpeed: 18
-  dashDuration: 0.16
-  dashCooldown: 0.45
+  dashSpeed: 12.5
+  dashDuration: 0.12
+  dashCooldown: 0.34
   dashInvulnerableSeconds: 0.08
-  attackTime: 0.14
-  attackKnockback: 6
+  attackTime: 0.16
+  attackKnockback: 9
   comboCount: 1
+  rangedAttackDamage: 2
+  rangedProjectileSpeed: 9
+  rangedProjectileRange: 9
+  rangedFireDelay: 0.32
   respawnDelay: 1.2

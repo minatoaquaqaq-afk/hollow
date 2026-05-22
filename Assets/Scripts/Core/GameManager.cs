@@ -1,6 +1,6 @@
-﻿using HollowStyleMVP.Save;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.SceneManagement;
+using HollowStyleMVP.Level;
 
 namespace HollowStyleMVP.Core
 {
@@ -8,7 +8,6 @@ namespace HollowStyleMVP.Core
     {
         public static GameManager Instance { get; private set; }
         public bool IsPaused { get; private set; }
-        public bool ShouldApplySaveOnNextScene { get; private set; }
 
         private void Awake()
         {
@@ -22,6 +21,7 @@ namespace HollowStyleMVP.Core
             DontDestroyOnLoad(gameObject);
             Time.timeScale = 1f;
             UiModalState.Reset();
+            RoomEdgeSceneTransition.EnsureExists();
         }
 
         private void OnEnable() => SceneManager.sceneLoaded += OnSceneLoaded;
@@ -38,25 +38,13 @@ namespace HollowStyleMVP.Core
         {
             SetPaused(false);
             UiModalState.Reset();
-            ShouldApplySaveOnNextScene = false;
-            SaveSystem.DeleteSave();
+            TestSceneRoomSetup.ResetRunState();
             SceneManager.LoadScene("TestRoom");
         }
 
         public void ContinueGame()
         {
-            SetPaused(false);
-            UiModalState.Reset();
-            ShouldApplySaveOnNextScene = true;
-            var data = SaveSystem.Load();
-            SceneManager.LoadScene(string.IsNullOrWhiteSpace(data.sceneName) ? "TestRoom" : data.sceneName);
-        }
-
-        public bool ConsumeSaveApplyRequest()
-        {
-            bool value = ShouldApplySaveOnNextScene;
-            ShouldApplySaveOnNextScene = false;
-            return value;
+            NewGame();
         }
 
         public void SetPaused(bool paused)
@@ -75,3 +63,4 @@ namespace HollowStyleMVP.Core
         }
     }
 }
+

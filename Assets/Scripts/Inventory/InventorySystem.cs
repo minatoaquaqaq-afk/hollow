@@ -1,6 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using HollowStyleMVP.Core;
+using HollowStyleMVP.Player;
+using HollowStyleMVP.Roguelike;
 using UnityEngine;
 
 namespace HollowStyleMVP.Inventory
@@ -32,6 +34,7 @@ namespace HollowStyleMVP.Inventory
             Coins = Mathf.Max(0, Coins + amount);
             GameEvents.RaiseCoinsChanged(Coins);
             InventoryChanged?.Invoke();
+            if (amount > 0) FeedbackManager.Instance?.Play(FeedbackSound.Pickup);
         }
 
         public bool SpendCoins(int amount)
@@ -40,6 +43,7 @@ namespace HollowStyleMVP.Inventory
             Coins -= amount;
             GameEvents.RaiseCoinsChanged(Coins);
             InventoryChanged?.Invoke();
+            FeedbackManager.Instance?.Play(FeedbackSound.Buy);
             return true;
         }
 
@@ -56,11 +60,43 @@ namespace HollowStyleMVP.Inventory
             itemLookup[item.id] = item;
             items.TryGetValue(item.id, out int current);
             items[item.id] = current + amount;
+            ApplyImmediateItemEffects(item);
             InventoryChanged?.Invoke();
+            FeedbackManager.Instance?.Play(FeedbackSound.Pickup);
         }
 
         public IReadOnlyDictionary<string, int> GetSnapshot() => items;
 
         public bool TryGetItemDefinition(string id, out InventoryItem item) => itemLookup.TryGetValue(id, out item);
+
+        public IEnumerable<(InventoryItem item, int amount)> GetItemsByType(ItemType type)
+        {
+            foreach (var pair in items)
+            {
+                if (itemLookup.TryGetValue(pair.Key, out var item) && item != null && item.type == type)
+                    yield return (item, pair.Value);
+            }
+        }
+
+        private void ApplyImmediateItemEffects(InventoryItem item)
+        {
+            var player = GameObject.FindGameObjectWithTag("Player");
+            if (player == null) return;
+
+            if (item.healAmount > 0 && player.TryGetComponent<HollowStyleMVP.Combat.Health>(out var health))
+                health.Heal(item.healAmount);
+
+            if (item.unlockAbilityOnPickup && player.TryGetComponent<PlayerAbilityController>(out var abilityController))
+                abilityController.Unlock(item.abilityToUnlock);
+
+            if (item.projectileModifier.HasAnyValue && player.TryGetComponent<PlayerProjectileModifiers>(out var projectileModifiers))
+                projectileModifiers.AddModifier(item.projectileModifier);
+
+            if (!item.autoEquipForTesting) return;
+            var equipment = EquipmentSystem.Instance != null ? EquipmentSystem.Instance : player.GetComponent<EquipmentSystem>();
+            if (equipment == null) return;
+            if (item.type == ItemType.Equipment) equipment.TryEquip(item);
+            if (item.type == ItemType.Charm) equipment.TryEquipCharm(item);
+        }
     }
 }

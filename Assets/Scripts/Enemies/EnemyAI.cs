@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace HollowStyleMVP.Enemies
 {
-    [RequireComponent(typeof(Rigidbody2D), typeof(Health))]
+    [RequireComponent(typeof(Rigidbody2D), typeof(Health), typeof(CombatStats))]
     public class EnemyAI : MonoBehaviour
     {
         [SerializeField] private EnemyConfig config;
@@ -12,16 +12,21 @@ namespace HollowStyleMVP.Enemies
         [SerializeField] private float detectRange = 7f;
         [SerializeField] private float attackRange = 1.2f;
         [SerializeField] private GameObject dropPrefab;
+        [SerializeField] private HollowStyleMVP.Items.DropTable dropTable;
         [SerializeField] private Transform[] patrolPoints;
         private Rigidbody2D body;
         private Health health;
+        private CombatStats stats;
         private Transform player;
         private int pointIndex;
 
         private void Awake()
         {
             body = GetComponent<Rigidbody2D>();
+            body.gravityScale = 0f;
+            body.freezeRotation = true;
             health = GetComponent<Health>();
+            stats = GetComponent<CombatStats>();
             ApplyConfig(config);
             health.Died += Die;
         }
@@ -35,7 +40,9 @@ namespace HollowStyleMVP.Enemies
             detectRange = config.detectRange;
             attackRange = config.attackRange;
             dropPrefab = config.dropPrefab;
+            dropTable = config.dropTable;
             if (health != null) health.Configure(config.maxHealth, 0.35f, true);
+            if (stats != null) stats.SetBase(config.maxHealth, 0, config.attackPower, config.defense, config.critChance, config.critResistance, config.critDamageMultiplier);
             if (TryGetComponent<ContactDamage>(out var contactDamage)) contactDamage.Configure(config.contactDamage, config.knockback);
         }
 
@@ -56,14 +63,18 @@ namespace HollowStyleMVP.Enemies
         {
             if (patrolPoints == null || patrolPoints.Length == 0)
             {
-                body.velocity = new Vector2(patrolSpeed * Mathf.Sign(transform.localScale.x == 0 ? 1 : transform.localScale.x), body.velocity.y);
+                body.velocity = Vector2.zero;
                 return;
             }
             Vector2 target = patrolPoints[pointIndex].position;
-            float dir = Mathf.Sign(target.x - transform.position.x);
-            body.velocity = new Vector2(dir * patrolSpeed, body.velocity.y);
-            Face(dir);
-            if (Mathf.Abs(target.x - transform.position.x) < 0.2f) pointIndex = (pointIndex + 1) % patrolPoints.Length;
+            Vector2 direction = target - (Vector2)transform.position;
+            if (direction.magnitude < 0.2f)
+            {
+                pointIndex = (pointIndex + 1) % patrolPoints.Length;
+                return;
+            }
+            body.velocity = direction.normalized * patrolSpeed;
+            Face(direction.x);
         }
 
         private void ChasePlayer()
@@ -71,12 +82,12 @@ namespace HollowStyleMVP.Enemies
             float dist = Vector2.Distance(transform.position, player.position);
             if (dist <= attackRange)
             {
-                body.velocity = new Vector2(0f, body.velocity.y);
+                body.velocity = Vector2.zero;
                 return;
             }
-            float dir = Mathf.Sign(player.position.x - transform.position.x);
-            body.velocity = new Vector2(dir * chaseSpeed, body.velocity.y);
-            Face(dir);
+            Vector2 direction = ((Vector2)player.position - (Vector2)transform.position).normalized;
+            body.velocity = direction * chaseSpeed;
+            Face(direction.x);
         }
 
         private void Face(float dir)
@@ -87,9 +98,9 @@ namespace HollowStyleMVP.Enemies
 
         private void Die()
         {
-            if (dropPrefab != null) Instantiate(dropPrefab, transform.position, Quaternion.identity);
+            if (dropTable != null) dropTable.Spawn(transform.position);
+            else if (dropPrefab != null) Instantiate(dropPrefab, transform.position, Quaternion.identity);
             Destroy(gameObject, 0.1f);
         }
     }
 }
-

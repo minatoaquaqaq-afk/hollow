@@ -14,5 +14,14 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/TestRoom2.unity
     guid: 5ae32294371d4d54884bfac3f5872b45
+  - enabled: 1
+    path: Assets/Scenes/TestRoom3.unity
+    guid: 608798aa5b4242bba43f1189e66d0117
+  - enabled: 1
+    path: Assets/Scenes/TestRoom4.unity
+    guid: 4c35e93c755b4507a18533a153bffe25
+  - enabled: 1
+    path: Assets/Scenes/TestRoom5.unity
+    guid: 2412fa7845b84ef7a945573b5bc4c5e1
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0

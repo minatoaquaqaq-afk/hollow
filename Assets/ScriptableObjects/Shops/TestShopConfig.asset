@@ -16,5 +16,17 @@ MonoBehaviour:
   items:
   - item: {fileID: 11400000, guid: 322cac244d7f69145bd22b06e4d04733, type: 2}
     price: 3
-    stock: 3
+    stock: 5
+  - item: {fileID: 11400000, guid: 5957004a9dbceda40ba04a2b6aa17e73, type: 2}
+    price: 10
+    stock: 1
+  - item: {fileID: 11400000, guid: f9319a9318fd015429466eb0e6cf4def, type: 2}
+    price: 9
+    stock: 1
+  - item: {fileID: 11400000, guid: 6eaa3be6cded6694ca71a272bffe848f, type: 2}
+    price: 8
+    stock: 1
+  - item: {fileID: 11400000, guid: d18a35366008ce84f8e93a008215db23, type: 2}
+    price: 6
+    stock: 1
   savePurchasedState: 1

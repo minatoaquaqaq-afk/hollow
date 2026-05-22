@@ -39,6 +39,7 @@ namespace HollowStyleMVP.UI
 
         private void Start()
         {
+            RoguelikeRoomHud.EnsureExists();
             var player = GameObject.FindGameObjectWithTag("Player");
             if (player != null && player.TryGetComponent<Health>(out var health))
             {
@@ -56,7 +57,7 @@ namespace HollowStyleMVP.UI
                 healthSlider.maxValue = max;
                 healthSlider.value = current;
             }
-            if (healthText != null) healthText.text = $"生命 {current}/{max}";
+            if (healthText != null) healthText.text = $"{current} / {max}";
         }
 
         private void UpdateEnergy(int current, int max)
@@ -66,17 +67,17 @@ namespace HollowStyleMVP.UI
                 energySlider.maxValue = max;
                 energySlider.value = current;
             }
-            if (energyText != null) energyText.text = $"能量 {current}/{max}";
+            if (energyText != null) energyText.text = $"{current} / {max}";
         }
 
         private void UpdateCoins(int coins)
         {
-            if (coinText != null) coinText.text = $"金币 {coins}";
+            if (coinText != null) coinText.text = $"{coins}";
         }
 
         private void UpdateCombo(int combo)
         {
-            if (comboText != null) comboText.text = combo > 1 ? $"连击 x{combo}" : "连击 -";
+            if (comboText != null) comboText.text = combo > 1 ? $"COMBO\n{combo}" : "COMBO\n0";
         }
 
         private void UpdateAbility(PlayerAbility ability, bool unlocked)
@@ -92,7 +93,7 @@ namespace HollowStyleMVP.UI
             bool doubleJump = abilities.TryGetValue(PlayerAbility.DoubleJump, out bool j) && j;
             bool downStrike = abilities.TryGetValue(PlayerAbility.DownStrike, out bool down) && down;
             bool ranged = abilities.TryGetValue(PlayerAbility.RangedAttack, out bool r) && r;
-            abilityText.text = $"能力：二段跳[{OnOff(doubleJump)}] 冲刺[{OnOff(dash)}] 下劈[{OnOff(downStrike)}] 远程[{OnOff(ranged)}]";
+            abilityText.text = string.Empty;
         }
 
         private static string OnOff(bool value) => value ? "开" : "关";

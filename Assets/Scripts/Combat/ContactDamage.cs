@@ -7,6 +7,12 @@ namespace HollowStyleMVP.Combat
         [SerializeField] private int damage = 1;
         [SerializeField] private float knockback = 7f;
         [SerializeField] private string targetTag = "Player";
+        private CombatStats attackerStats;
+
+        private void Awake()
+        {
+            attackerStats = GetComponent<CombatStats>();
+        }
 
         public void Configure(int newDamage, float newKnockback)
         {
@@ -21,7 +27,10 @@ namespace HollowStyleMVP.Combat
         private void TryDamage(Collider2D other)
         {
             if (!string.IsNullOrWhiteSpace(targetTag) && !other.CompareTag(targetTag)) return;
-            if (other.TryGetComponent<Health>(out var health)) health.Damage(damage, transform.position, knockback);
+            if (!other.TryGetComponent<Health>(out var health)) return;
+            bool critical = false;
+            int finalDamage = attackerStats != null ? attackerStats.CalculateDamage(damage, other.GetComponent<CombatStats>(), out critical) : damage;
+            health.Damage(finalDamage, transform.position, knockback, critical);
         }
     }
 }

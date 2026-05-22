@@ -9,8 +9,13 @@ namespace HollowStyleMVP.Config
         public AudioClip jump;
         public AudioClip dash;
         public AudioClip attack;
+        public AudioClip downSlash;
         public AudioClip hit;
+        public AudioClip crit;
         public AudioClip death;
+        public AudioClip pickup;
+        public AudioClip buy;
+        public AudioClip open;
         public AudioClip uiConfirm;
         public AudioClip uiCancel;
     }
