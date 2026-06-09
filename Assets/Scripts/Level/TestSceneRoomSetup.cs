@@ -8,6 +8,9 @@ using HollowStyleMVP.Interaction;
 using HollowStyleMVP.Inventory;
 using HollowStyleMVP.Items;
 using HollowStyleMVP.Shop;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -16,6 +19,7 @@ namespace HollowStyleMVP.Level
     public class TestSceneRoomSetup : MonoBehaviour
     {
         private const string RootName = "Runtime Testscene Content";
+        private const string BossArtPrefabPath = "Assets/Art/Mosters/BossPrefabTemplate.prefab";
         private static readonly HashSet<int> clearedCombatRooms = new HashSet<int>();
         private static readonly List<Health> livingLocks = new List<Health>();
         private static bool currentRoomLocked;
@@ -84,7 +88,7 @@ namespace HollowStyleMVP.Level
                     }
 
                     LockRoom("Boss房：击败 Boss 后开门");
-                    RegisterLockEnemy(CreateEnemy(root.transform, new Vector3(0f, 0.5f, 0f), "Test Boss", Color.magenta, 35, 2, 12, true));
+                    RegisterLockEnemy(CreateBossEnemy(root.transform, new Vector3(0f, 0.5f, 0f)));
                     break;
             }
         }
@@ -211,6 +215,41 @@ namespace HollowStyleMVP.Level
 
             if (boss) enemy.AddComponent<BossHealthHud>().Bind(health);
             return health;
+        }
+
+        private static Health CreateBossEnemy(Transform parent, Vector3 position)
+        {
+            var prefab = LoadBossArtPrefab();
+            if (prefab == null)
+                return CreateEnemy(parent, position, "Test Boss", Color.magenta, 35, 2, 12, true);
+
+            var enemy = Instantiate(prefab, position, Quaternion.identity, parent);
+            enemy.name = "Test Boss";
+            enemy.AddComponent<Rigidbody2D>();
+            var collider = enemy.AddComponent<CircleCollider2D>();
+            collider.radius = 0.7f;
+            var health = enemy.AddComponent<Health>();
+            var stats = enemy.AddComponent<CombatStats>();
+            var contact = enemy.AddComponent<ContactDamage>();
+            enemy.AddComponent<EnemyAI>();
+            enemy.AddComponent<RoomBoundaryLimiter>();
+            var drop = enemy.AddComponent<CoinDropOnDeath>();
+
+            health.Configure(35, 0.18f, true);
+            stats.SetBase(35, 1, 2, 1, 0.05f, 0f, 1.5f);
+            contact.Configure(2, 8f);
+            drop.Configure(12);
+            enemy.AddComponent<BossHealthHud>().Bind(health);
+            return health;
+        }
+
+        private static GameObject LoadBossArtPrefab()
+        {
+#if UNITY_EDITOR
+            return AssetDatabase.LoadAssetAtPath<GameObject>(BossArtPrefabPath);
+#else
+            return null;
+#endif
         }
 
         private static void CreateShop(Transform parent, Vector3 position)
