@@ -7,6 +7,7 @@ using HollowStyleMVP.Enemies;
 using HollowStyleMVP.Interaction;
 using HollowStyleMVP.Inventory;
 using HollowStyleMVP.Items;
+using HollowStyleMVP.Player;
 using HollowStyleMVP.Shop;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -33,6 +34,7 @@ namespace HollowStyleMVP.Level
         public static void Apply(string sceneName, bool forceRebuild = false)
         {
             if (!TryGetRoomNumber(sceneName, out int roomNumber)) return;
+            EnsureVisibleFightHud();
             int sceneHandle = UnityEngine.SceneManagement.SceneManager.GetActiveScene().handle;
             if (!forceRebuild && configuredSceneHandle == sceneHandle && GameObject.Find(RootName) != null) return;
 
@@ -91,6 +93,15 @@ namespace HollowStyleMVP.Level
                     RegisterLockEnemy(CreateBossEnemy(root.transform, new Vector3(0f, 0.5f, 0f)));
                     break;
             }
+        }
+
+        private static void EnsureVisibleFightHud()
+        {
+            if (FindAnyObjectByType<RuntimeVisibleFightHud>() != null) return;
+
+            var obj = new GameObject(nameof(RuntimeVisibleFightHud));
+            DontDestroyOnLoad(obj);
+            obj.AddComponent<RuntimeVisibleFightHud>();
         }
 
         private static void LockRoom(string message)
@@ -519,13 +530,131 @@ namespace HollowStyleMVP.Level
             const float height = 24f;
             float x = (Screen.width - width) * 0.5f;
             var rect = new Rect(x, 24f, width, height);
-            GUI.Box(new Rect(x - 2f, 22f, width + 4f, height + 20f), "BOSS");
-            GUI.Box(rect, string.Empty);
+            var frame = HollowStyleMVP.UI.FightHudSkin.LoadTexture("BossHpBar_Frame.png");
+            var fill = HollowStyleMVP.UI.FightHudSkin.LoadTexture("BossHpBar_Fill.png");
             float ratio = Mathf.Clamp01((float)target.CurrentHealth / target.MaxHealth);
-            GUI.color = Color.magenta;
-            GUI.DrawTexture(new Rect(x + 2f, 26f, (width - 4f) * ratio, height - 4f), Texture2D.whiteTexture);
+            var oldColor = GUI.color;
+            if (frame != null && fill != null)
+            {
+                var frameRect = new Rect((Screen.width - 719f * 0.58f) * 0.5f, 28f, 719f * 0.58f, 32f * 0.58f);
+                var fillRect = new Rect(frameRect.x + 11f * 0.58f, frameRect.y + 7f * 0.58f, 697f * 0.58f, 18f * 0.58f);
+                GUI.BeginGroup(new Rect(fillRect.x, fillRect.y, fillRect.width * ratio, fillRect.height));
+                GUI.DrawTexture(new Rect(0f, 0f, fillRect.width, fillRect.height), fill, ScaleMode.StretchToFill, true);
+                GUI.EndGroup();
+                GUI.DrawTexture(frameRect, frame, ScaleMode.StretchToFill, true);
+            }
+            else
+            {
+                GUI.Box(new Rect(x - 2f, 22f, width + 4f, height + 20f), "BOSS");
+                GUI.Box(rect, string.Empty);
+                GUI.color = Color.magenta;
+                GUI.DrawTexture(new Rect(x + 2f, 26f, (width - 4f) * ratio, height - 4f), Texture2D.whiteTexture);
+                GUI.color = Color.white;
+            }
             GUI.color = Color.white;
             GUI.Label(new Rect(x, 24f, width, height), $"{target.CurrentHealth} / {target.MaxHealth}");
+            GUI.color = oldColor;
+        }
+    }
+
+    public class RuntimeVisibleFightHud : MonoBehaviour
+    {
+        private Health playerHealth;
+        private PlayerStatsController playerEnergy;
+        private CombatStats playerStats;
+        private GUIStyle titleStyle;
+        private GUIStyle valueStyle;
+        private GUIStyle smallStyle;
+
+        private void Awake()
+        {
+            hideFlags = HideFlags.DontSave;
+        }
+
+        private void Update()
+        {
+            if (playerHealth != null && playerEnergy != null && playerStats != null) return;
+
+            var player = GameObject.FindGameObjectWithTag("Player");
+            if (player == null) return;
+
+            player.TryGetComponent(out playerHealth);
+            player.TryGetComponent(out playerEnergy);
+            player.TryGetComponent(out playerStats);
+        }
+
+        private void OnGUI()
+        {
+            EnsureStyles();
+
+            int hp = playerHealth != null ? playerHealth.CurrentHealth : 0;
+            int maxHp = playerHealth != null ? playerHealth.MaxHealth : 0;
+            int energy = playerEnergy != null ? playerEnergy.CurrentEnergy : 0;
+            int maxEnergy = playerEnergy != null ? playerEnergy.MaxEnergy : 0;
+            int attack = playerStats != null ? playerStats.Snapshot.attackPower : 0;
+            int coins = InventorySystem.Instance != null ? InventorySystem.Instance.Coins : 0;
+
+            DrawPanel(new Rect(16f, 16f, 380f, 136f), new Color(0f, 0f, 0f, 0.78f), new Color(0.1f, 0.9f, 1f, 1f));
+            GUI.Label(new Rect(30f, 22f, 340f, 30f), "FIGHT HUD", titleStyle);
+            DrawValueRow(36f, "HP", $"{hp}/{maxHp}", new Color(1f, 0.08f, 0.16f, 1f));
+            DrawValueRow(72f, "EN", $"{energy}/{maxEnergy}", new Color(0.1f, 0.9f, 1f, 1f));
+            DrawValueRow(108f, "ATK / CR", $"{attack} / {coins}", new Color(1f, 0.78f, 0.18f, 1f));
+
+            float stripWidth = Mathf.Min(520f, Screen.width - 40f);
+            var strip = new Rect((Screen.width - stripWidth) * 0.5f, Screen.height - 92f, stripWidth, 72f);
+            DrawPanel(strip, new Color(0f, 0f, 0f, 0.68f), new Color(1f, 0.1f, 0.9f, 1f));
+            GUI.Label(new Rect(strip.x + 16f, strip.y + 12f, strip.width - 32f, 24f), "WEAPONS: GUN  DAGGER  BOMB", valueStyle);
+            GUI.Label(new Rect(strip.x + 16f, strip.y + 42f, strip.width - 32f, 20f), "ESC / top-right button pauses", smallStyle);
+        }
+
+        private void DrawValueRow(float y, string label, string value, Color accent)
+        {
+            var oldColor = GUI.color;
+            GUI.color = accent;
+            GUI.DrawTexture(new Rect(30f, y + 10f, 5f, 22f), Texture2D.whiteTexture);
+            GUI.color = oldColor;
+            GUI.Label(new Rect(44f, y, 120f, 36f), label, smallStyle);
+            GUI.Label(new Rect(160f, y, 200f, 36f), value, valueStyle);
+        }
+
+        private void DrawPanel(Rect rect, Color background, Color accent)
+        {
+            var oldColor = GUI.color;
+            GUI.color = background;
+            GUI.DrawTexture(rect, Texture2D.whiteTexture);
+            GUI.color = accent;
+            GUI.DrawTexture(new Rect(rect.x, rect.y, rect.width, 3f), Texture2D.whiteTexture);
+            GUI.DrawTexture(new Rect(rect.x, rect.yMax - 3f, rect.width, 3f), Texture2D.whiteTexture);
+            GUI.DrawTexture(new Rect(rect.x, rect.y, 3f, rect.height), Texture2D.whiteTexture);
+            GUI.DrawTexture(new Rect(rect.xMax - 3f, rect.y, 3f, rect.height), Texture2D.whiteTexture);
+            GUI.color = oldColor;
+        }
+
+        private void EnsureStyles()
+        {
+            if (titleStyle != null) return;
+
+            titleStyle = new GUIStyle(GUI.skin.label)
+            {
+                alignment = TextAnchor.MiddleLeft,
+                fontSize = 22,
+                fontStyle = FontStyle.Bold,
+                normal = { textColor = Color.white }
+            };
+            valueStyle = new GUIStyle(GUI.skin.label)
+            {
+                alignment = TextAnchor.MiddleLeft,
+                fontSize = 22,
+                fontStyle = FontStyle.Bold,
+                normal = { textColor = Color.white }
+            };
+            smallStyle = new GUIStyle(GUI.skin.label)
+            {
+                alignment = TextAnchor.MiddleLeft,
+                fontSize = 16,
+                fontStyle = FontStyle.Bold,
+                normal = { textColor = new Color(0.72f, 0.98f, 1f, 1f) }
+            };
         }
     }
 

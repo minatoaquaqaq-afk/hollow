@@ -313,5 +313,6 @@ namespace HollowStyleMVP.UI
                 _ => $"{value}/{LastRoom}"
             };
         }
+
     }
 }
